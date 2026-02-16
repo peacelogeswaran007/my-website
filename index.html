@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cloud Image Upload System</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-image: url('https://images6.alphacoders.com/339/339197.jpg');
+    background-size: cover;
+    background-position: center;
+    margin: 0;
+    padding: 0;
+}
+
+/* Common container */
+.container {
+    width: 360px;
+    margin: 80px auto;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+h2 {
+    color: white;
+    margin-bottom: 15px;
+}
+
+input, button {
+    width: 95%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+}
+
+button {
+    background: #007BFF;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+.link {
+    color: #00ccff;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.hidden {
+    display: none;
+}
+
+/* FILE INPUT */
+.file-input {
+    background: white;
+    color: black;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.file-input::file-selector-button {
+    background: #007BFF;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+/* Image preview */
+.image-box {
+    margin: 12px 0;
+}
+
+.image-box img {
+    width: 100%;
+    border-radius: 8px;
+    border: 2px solid white;
+}
+
+/* Delete button */
+.delete-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    margin-top: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.delete-btn:hover {
+    background: #b02a37;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN PAGE -->
+<div class="container" id="loginPage">
+    <h2>Login</h2>
+    <input type="text" id="loginUser" placeholder="Username">
+    <input type="password" id="loginPass" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <p class="link" onclick="showRegister()">+ Add New User / Register</p>
+</div>
+
+<!-- REGISTER PAGE -->
+<div class="container hidden" id="registerPage">
+    <h2>Register</h2>
+    <input type="text" id="regUser" placeholder="Username">
+    <input type="password" id="regPass" placeholder="Password">
+    <button onclick="register()">Register</button>
+    <p class="link" onclick="showLogin()">← Back to Login</p>
+</div>
+
+<!-- UPLOAD PAGE -->
+<div class="container hidden" id="uploadPage">
+    <h2>Upload Image</h2>
+    <input type="file" id="fileInput" accept="image/*" class="file-input">
+    <button onclick="uploadImage()">Upload</button>
+    <button onclick="showImages()">Show Uploaded Images</button>
+    <p class="link" onclick="logout()">Logout</p>
+</div>
+
+<!-- SHOW IMAGE PAGE -->
+<div class="container hidden" id="imagePage">
+    <h2>Uploaded Images</h2>
+    <div id="imageList"></div>
+    <button onclick="showUpload()">Back</button>
+</div>
+
+<script>
+/* ---------- AUTH ---------- */
+function register() {
+    if (!regUser.value || !regPass.value) {
+        alert("Fill all fields");
+        return;
+    }
+    localStorage.setItem("username", regUser.value);
+    localStorage.setItem("password", regPass.value);
+    alert("Registration successful");
+    showLogin();
+}
+
+function login() {
+    if (
+        loginUser.value === localStorage.getItem("username") &&
+        loginPass.value === localStorage.getItem("password")
+    ) {
+        showUpload();
+    } else {
+        alert("Invalid credentials");
+    }
+}
+
+function logout() {
+    showLogin();
+}
+
+/* ---------- IMAGE UPLOAD ---------- */
+function uploadImage() {
+    const file = fileInput.files[0];
+    if (!file) {
+        alert("Select an image");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function () {
+        let images = JSON.parse(localStorage.getItem("images")) || [];
+        images.push(reader.result);
+        localStorage.setItem("images", JSON.stringify(images));
+        alert("Image uploaded successfully");
+        fileInput.value = "";
+    };
+    reader.readAsDataURL(file);
+}
+
+/* ---------- SHOW IMAGES ---------- */
+function showImages() {
+    imageList.innerHTML = "";
+    const images = JSON.parse(localStorage.getItem("images")) || [];
+
+    if (images.length === 0) {
+        imageList.innerHTML = "<p style='color:white'>No images uploaded</p>";
+    }
+
+    images.forEach((img, index) => {
+        const div = document.createElement("div");
+        div.className = "image-box";
+        div.innerHTML = `
+            <img src="${img}">
+            <button class="delete-btn" onclick="deleteImage(${index})">
+                Delete
+            </button>
+        `;
+        imageList.appendChild(div);
+    });
+
+    hideAll();
+    imagePage.classList.remove("hidden");
+}
+
+/* ---------- DELETE IMAGE ---------- */
+function deleteImage(index) {
+    let images = JSON.parse(localStorage.getItem("images")) || [];
+    images.splice(index, 1);
+    localStorage.setItem("images", JSON.stringify(images));
+    showImages();
+}
+
+/* ---------- PAGE CONTROL ---------- */
+function showRegister() {
+    hideAll();
+    registerPage.classList.remove("hidden");
+}
+
+function showLogin() {
+    hideAll();
+    loginPage.classList.remove("hidden");
+}
+
+function showUpload() {
+    hideAll();
+    uploadPage.classList.remove("hidden");
+}
+
+function hideAll() {
+    loginPage.classList.add("hidden");
+    registerPage.classList.add("hidden");
+    uploadPage.classList.add("hidden");
+    imagePage.classList.add("hidden");
+}
+</script>
+
+</body>
+</html>
